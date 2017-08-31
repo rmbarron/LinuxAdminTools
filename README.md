@@ -14,12 +14,12 @@ to stdout.
 
 ./apt_install_history.py [-a|-c|-s] [-n <int>]
 
-flags:
-  -a, --all :
-  		Prints every line of every dpkg.log file
-  -c, --command_code :
-  		Prints every line of an action (install|remove|purge)
-  -s, --status_code :
-  		Prints every line of package status (installed|not-installed)
-  -n, --number :
-  		Number of lines to print (starting from most recent)
+flags:  
+  -a, --all :  
+  		Prints every line of every dpkg.log file  
+  -c, --command_code :  
+  		Prints every line of an action (install|remove|purge)  
+  -s, --status_code :  
+  		Prints every line of package status (installed|not-installed)  
+  -n, --number :  
+  		Number of lines to print (starting from most recent)  
