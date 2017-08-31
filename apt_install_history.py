@@ -18,6 +18,7 @@
 
 
 import argparse
+import datetime
 import glob
 import gzip
 import re
@@ -32,6 +33,8 @@ FULL_LIST = [INSTALLED, NOT_INSTALLED, REMOVE, INSTALL, PURGE]
 COMMANDS = [REMOVE, INSTALL, PURGE]
 STATUS = [INSTALLED, NOT_INSTALLED]
 
+FROM_DATE = False
+UNTIL_DATE = False
 # Use a dictionary instead of enum to prevent dependency on aenum pip package.
 ENUM = {'all': FULL_LIST, 'command_code': COMMANDS, 'status_code': STATUS}
 
@@ -94,6 +97,12 @@ def MatchLines(file_list, matcher):
   matched_lines = []
   for files in file_list:
     for line in files:
+      if FROM_DATE:
+        if FROM_DATE > datetime.datetime.strptime(line.split()[0], '%Y-%m-%d'):
+          continue
+      if UNTIL_DATE:
+        if UNTIL_DATE < datetime.datetime.strptime(line.split()[0], '%Y-%m-%d'):
+          return matched_lines
       for instance in matcher:
         if instance.match(line):
           matched_lines.append(line)
@@ -111,13 +120,20 @@ def ParseOptions():
       '-a', '--all', help='Print status and command lines.',
       action='store_true')
   parser.add_argument(
+      '-c', '--command_code', help='Print only command lines from logs.',
+      action='store_true')
+  parser.add_argument(
+      '-f', '--from_date', type=str, help='Print entries starting from this '
+      'date. *Must* be in YYYY-MM-DD format.')
+  parser.add_argument(
       '-n', '--number', type=int, help='Number of lines to print.')
   parser.add_argument(
       '-s', '--status_code', help='Print only status lines from logs.',
       action='store_true')
   parser.add_argument(
-      '-c', '--command_code', help='Print only command lines from logs.',
-      action='store_true')
+      '-u', '--until', type=str, help='Print entries until this date. *Must* be'
+      ' in YYYY-MM-DD format.')
+
 
   return parser.parse_args()
 
@@ -134,6 +150,8 @@ def OutputLogs(line_num, mode):
   file_list = ParseLogs(log_list)
   matched_lines = MatchLines(file_list, mode)
   if line_num:
+    if line_num > len(matched_lines):
+      line_num = len(matched_lines)
     for i in range(-(line_num), 0, 1):
       print matched_lines[i]
   else:
@@ -143,6 +161,12 @@ def OutputLogs(line_num, mode):
 
 def main():
   args = ParseOptions()
+  if args.from_date:
+    global FROM_DATE
+    FROM_DATE = datetime.datetime.strptime(args.from_date, '%Y-%m-%d')
+  if args.until:
+    global UNTIL_DATE
+    UNTIL_DATE = datetime.datetime.strptime(args.until, '%Y-%m-%d')
   if args.all:
     OutputLogs(args.number, ENUM['all'])
     return
